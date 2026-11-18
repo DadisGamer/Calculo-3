@@ -1,0 +1,66 @@
+% =========================================================================
+% Cálculo de la población total en una ciudad con densidad radial y gráficas
+% Problema: P = \int_{0}^{2\pi} \int_{0}^{5} (10 * e^{-r^2}) * r * dr * d\theta
+% =========================================================================
+
+clear;
+clc;
+close all;
+
+%% === 1. CÁLCULO DE LA POBLACIÓN (ANALÍTICO Y NUMÉRICO) ===
+fprintf('=== MÉTODO 1: Solución Analítica (Simbólica) ===\n');
+syms r theta;
+
+integrando_simbolico = 10 * exp(-r^2) * r;
+integral_interior = int(integrando_simbolico, r, 0, 5);
+poblacion_exacta = int(integral_interior, theta, 0, 2*pi);
+
+fprintf('Expresión exacta:\n');
+disp(poblacion_exacta);
+
+pob_simb_miles = double(poblacion_exacta);
+fprintf('Población en miles de habitantes: %.4f\n', pob_simb_miles);
+fprintf('Población total aproximada:      %.2f habitantes\n\n', pob_simb_miles * 1000);
+
+fprintf('=== MÉTODO 2: Solución Numérica (integral2) ===\n');
+integrando_numerico = @(r, theta) 10 .* exp(-r.^2) .* r;
+pob_numerica_miles = integral2(integrando_numerico, 0, 5, 0, 2*pi);
+
+fprintf('Población en miles de habitantes: %.4f\n', pob_numerica_miles);
+fprintf('Población total aproximada:      %.2f habitantes\n\n', pob_numerica_miles * 1000);
+
+
+%% === 2. GRÁFICA 1: PERFIL DE DENSIDAD RADIAL (2D) ===
+% Muestra cómo disminuye la población por km^2 a medida que nos alejamos del centro
+r_vals = linspace(0, 5, 200);
+densidad_vals = 10 * exp(-r_vals.^2);
+
+figure('Name', 'Perfil de Densidad', 'Color', 'w');
+plot(r_vals, densidad_vals, 'LineWidth', 2.5, 'Color', 'b');
+grid on;
+xlabel('Distancia al centro de la ciudad, r (km)', 'FontSize', 11);
+ylabel('Densidad \rho(r) [miles de hab / km^2]', 'FontSize', 11);
+title('Decaimiento de la Densidad Poblacional desde el Centro', 'FontSize', 12, 'FontWeight', 'bold');
+legend('\rho(r) = 10 e^{-r^2}', 'Location', 'northeast');
+
+
+%% === 3. GRÁFICA 2: SUPERFICIE DE LA CIUDAD EN 3D ===
+% Creamos una malla en coordenadas cartesianas limitada por el radio R = 5 km
+[X, Y] = meshgrid(linspace(-5, 5, 250), linspace(-5, 5, 250));
+R_mesh = sqrt(X.^2 + Y.^2);
+
+% La densidad es cero fuera del radio de la ciudad (R > 5)
+Z = 10 * exp(-R_mesh.^2);
+Z(R_mesh > 5) = NaN; % Corta la gráfica en forma de cilindro circular
+
+figure('Name', 'Superficie Poblacional 3D', 'Color', 'w');
+surf(X, Y, Z, 'EdgeColor', 'none');
+colormap('jet');
+colorbar;
+grid on;
+
+xlabel('Eje X (km)');
+ylabel('Eje Y (km)');
+zlabel('Densidad (miles de hab/km^2)');
+title('Distribución Espacial de la Población en la Ciudad Circular (R = 5 km)');
+view(45, 30); % Ajusta el ángulo de la cámara 3D
